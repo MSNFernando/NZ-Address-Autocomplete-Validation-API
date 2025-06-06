@@ -1,2 +1,75 @@
-# NZ-Address-Autocomplete-Validation-API
-New Zealand Address Autocomplete &amp; Validation API
+# New Zealand Address Autocomplete &amp; Validation API
+
+This is a full-stack, Dockerised platform for NZ address search, powered by **LINZ data** with built-in:
+- Address Autocomplete &amp; Validation API
+- API Key Management
+- Stripe-powered subscription billing (Free, Monthly, Annual)
+- Rate limiting per plan
+- Demo Next.JS frontend for address search
+
+
+## The Tech Stack
+
+- **FastAPI** - API backend
+- **PostgreSQL + PostGIS + pg_trgm** - LINZ address storage with fuzzy and spatial search
+- **Redis** – Fast rate-limiting and caching
+- **Stripe** – Subscription billing and trial periods
+- **Next.js** – Frontend for demo, signup, and usage dashboard
+- **Docker Compose** – Local dev environment
+
+
+## Features
+
+- Autocomplete address search using `ILIKE` + `pg_trgm`
+- Exact address verification
+- Stripe-powered billing flow (free trial included)
+- Daily/monthly rate limiting per plan
+- API key authentication
+- Subscription syncing via Stripe webhooks
+- Admin-ready database schema
+
+
+## Project Structure
+
+├── docker-compose.yml
+├── /backend            # FastAPI or Express
+├── /frontend           # Next.js UI
+├── /db/init.sql        # LINZ schema + data import
+├── docker-compose.yml  # Dev orchestration
+├── .env                # Environment variables
+
+## Getting Started
+```bash
+# Clone the Repo
+git clone https://github.com/MSNFernando/NZ-Address-Autocomplete-Validation-API.get
+cd NZ-Address-Autocomplete-Validation-API
+
+# Modify the .env file
+cp sample.env .env
+nano .env
+
+# update your variables -- We've commented them out below but update them with your information
+#POSTGRES_USER=addressapi
+#POSTGRES_PASSWORD=NZaddress123!
+#POSTGRES_DB=nz_address
+#REDIS_URL=redis://redis:6379
+#STRIPE_SECRET_KEY=sk_test_...
+#STRIPE_WEBHOOK_SECRET=whsec_...
+#STRIPE_PUBLIC_KEY=pk_test_...
+#NEXT_PUBLIC_API_URL=http://localhost:3001
+
+# Run with Docker
+docker compose up -d --build
+
+# Download the LINZ Address CSV
+wget https://s3.filebase.co.nz/public/download%2F/nz-addresses.csv -o nz-address.csv
+
+# Import into the addresses table
+docked exec -i linz_postgres psql -U addressapi -d nz_address \
+  -c "copy addresses FROM '/data/nz-address.csv' with CSV HEADER"
+
+# Populate PostGIS geometry
+UPDATE addresses
+SET location = ST_SetSRID(ST_MakePoint(gd2000_xcoord, gd2000_ycoord), 4167)
+WHERE gd2000_xcoord IS NOT NULL AND gd2000_ycoord IS NOT NULL;
+```
