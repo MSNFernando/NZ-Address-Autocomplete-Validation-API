@@ -32,7 +32,7 @@ This is a full-stack, Dockerised platform for NZ address search, powered by **LI
 ## Project Structure
 
 ├── docker-compose.yml
-├── /backend            # FastAPI or Express
+├── /backend            # FastAPI
 ├── /frontend           # Next.js UI
 ├── /db/init.sql        # LINZ schema + data import
 ├── docker-compose.yml  # Dev orchestration
@@ -48,19 +48,19 @@ cd NZ-Address-Autocomplete-Validation-API
 cp sample.env .env
 nano .env
 
-# update your variables -- We've commented them out below but update them with your information
-#POSTGRES_USER=addressapi
-#POSTGRES_PASSWORD=NZaddress123!
-#POSTGRES_DB=nz_address
-#REDIS_URL=redis://redis:6379
-#STRIPE_SECRET_KEY=sk_test_...
-#STRIPE_WEBHOOK_SECRET=whsec_...
-#STRIPE_PUBLIC_KEY=pk_test_...
-#NEXT_PUBLIC_API_URL=http://localhost:3001
+# update your variables!!!
 
 # Run with Docker
 docker compose up -d --build
 
+# Initialise the addresses table
+cd db
+chmod +x import_addresses.sh
+./import_addresses.sh
+```
+
+## If the import_addresses doesnt work
+```bash
 # Download the LINZ Address CSV
 wget https://s3.filebase.co.nz/public/download%2F/nz-addresses.csv -o nz-address.csv
 
@@ -72,4 +72,16 @@ docker exec -i linz_postgres psql -U addressapi -d nz_address \
 UPDATE addresses
 SET location = ST_SetSRID(ST_MakePoint(gd2000_xcoord, gd2000_ycoord), 4167)
 WHERE gd2000_xcoord IS NOT NULL AND gd2000_ycoord IS NOT NULL;
+```
+
+## Generate Admin Token
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+## Monitoring or Debugging Redis
+```bash
+docker exec -it api_redis redis-cli
+> KEYS ratelimit:*
+> GET ratelimit:yourkey:20250606
 ```
