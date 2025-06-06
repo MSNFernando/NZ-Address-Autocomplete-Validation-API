@@ -65,7 +65,7 @@ docker compose up -d --build
 wget https://s3.filebase.co.nz/public/download%2F/nz-addresses.csv -o nz-address.csv
 
 # Import into the addresses table
-docked exec -i linz_postgres psql -U addressapi -d nz_address \
+docker exec -i linz_postgres psql -U addressapi -d nz_address \
   -c "copy addresses FROM '/data/nz-address.csv' with CSV HEADER"
 
 # Populate PostGIS geometry
