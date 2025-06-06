@@ -30,13 +30,14 @@ This is a full-stack, Dockerised platform for NZ address search, powered by **LI
 
 
 ## Project Structure
-
+```bash
 ├── docker-compose.yml
 ├── /backend            # FastAPI
 ├── /frontend           # Next.js UI
 ├── /db/init.sql        # LINZ schema + data import
 ├── docker-compose.yml  # Dev orchestration
 ├── .env                # Environment variables
+```
 
 ## Getting Started
 ```bash
