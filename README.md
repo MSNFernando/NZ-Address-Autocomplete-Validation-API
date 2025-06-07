@@ -31,12 +31,17 @@ This is a full-stack, Dockerised platform for NZ address search, powered by **LI
 
 ## Project Structure
 ```bash
-├── docker-compose.yml
-├── /backend            # FastAPI
-├── /frontend           # Next.js UI
-├── /db/init.sql        # LINZ schema + data import
-├── docker-compose.yml  # Dev orchestration
-├── .env                # Environment variables
+/NZ-Address-Autocomplete-Validation-API
+├── Makefile
+├── .env                      # Environment variables
+├── docker-compose.yml        # Dev orchestration
+├── db/
+│   └── init.sql              # LINZ schema + data import
+├── importer/
+│   ├── Dockerfile
+│   └── import_addresses.sh
+├── backend/                  # FastAPI
+├── frontend/                 # Next.js UI
 ```
 
 ## Getting Started
@@ -85,4 +90,11 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 docker exec -it api_redis redis-cli
 > KEYS ratelimit:*
 > GET ratelimit:yourkey:20250606
+```
+
+## Makefile
+```bash
+make up
+make import-addresses
+make reset-db
 ```

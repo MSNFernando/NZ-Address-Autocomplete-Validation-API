@@ -1,25 +1,17 @@
-#!/bin/bash
+#!/bin/sh
 
-# Load environment variables from .env
-set -o allexport
-source .env
-set +o allexport
+. /app/.env
 
-# Configuration
 CSV_URL="https://s3.filebase.co.nz/public/download%2F/nz-addresses.csv"
 CSV_FILE="nz-addresses.csv"
-CSV_PATH="/data/${CSV_FILE}"
+CSV_PATH="/app/db/$CSV_FILE"
 CONTAINER_NAME="api_postgres"
-TABLE_NAME="addresses"
 
-echo "Downloading latest NZ address dataset..."
-curl -L "$CSV_URL" -o "./db/$CSV_FILE"
-
-echo "Copying CSV to Postgres container..."
-docker cp "./db/$CSV_FILE" "$CONTAINER_NAME:$CSV_PATH"
+echo "Downloading NZ address dataset..."
+curl -L "$CSV_URL" -o "$CSV_PATH"
 
 echo "Importing CSV into $TABLE_NAME..."
-docker exec -i "$CONTAINER_NAME" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\
+psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\
   \COPY $TABLE_NAME(
     address_id, source_dataset, change_id,
     full_address_number, full_road_name, full_address, territorial_authority,
@@ -33,10 +25,10 @@ docker exec -i "$CONTAINER_NAME" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "
   ) FROM '$CSV_PATH' WITH CSV HEADER;
 "
 
-echo "Updating spatial geometry from coordinates..."
-docker exec -i "$CONTAINER_NAME" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\
+echo "Updating geometry..."
+psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\
   UPDATE $TABLE_NAME SET location = ST_SetSRID(ST_MakePoint(gd2000_xcoord, gd2000_ycoord), 4167) \
   WHERE gd2000_xcoord IS NOT NULL AND gd2000_ycoord IS NOT NULL;
 "
 
-echo "Address seeding complete."
+echo "Done importing addresses."
