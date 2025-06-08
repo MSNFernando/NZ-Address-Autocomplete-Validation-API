@@ -1,18 +1,14 @@
 #!/bin/sh
 
+set -e
 . /app/.env
 
-CSV_URL="https://s3.filebase.co.nz/public/download%2F/nz-addresses.csv"
-CSV_FILE="nz-addresses.csv"
-CSV_PATH="/app/db/$CSV_FILE"
-CONTAINER_NAME="api_postgres"
-
-echo "Downloading NZ address dataset..."
-curl -L "$CSV_URL" -o "$CSV_PATH"
+CSV="/app/db/nz-addresses-clean.csv"
+TABLE_NAME="addresses"
 
 echo "Importing CSV into $TABLE_NAME..."
-psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\
-  \COPY $TABLE_NAME(
+psql -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+  -c "\\copy $TABLE_NAME(
     address_id, source_dataset, change_id,
     full_address_number, full_road_name, full_address, territorial_authority,
     unit_type, unit_value, level_type, level_value,
@@ -22,13 +18,13 @@ psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\
     suburb_locality, town_city, postcode,
     address_class, address_lifecycle,
     gd2000_xcoord, gd2000_ycoord
-  ) FROM '$CSV_PATH' WITH CSV HEADER;
-"
+  ) FROM '$CSV' WITH CSV HEADER"
 
-echo "Updating geometry..."
-psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\
-  UPDATE $TABLE_NAME SET location = ST_SetSRID(ST_MakePoint(gd2000_xcoord, gd2000_ycoord), 4167) \
-  WHERE gd2000_xcoord IS NOT NULL AND gd2000_ycoord IS NOT NULL;
-"
+echo "Updating spatial geometry..."
+psql -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<EOF
+UPDATE $TABLE_NAME
+SET location = ST_SetSRID(ST_MakePoint(gd2000_xcoord, gd2000_ycoord), 4167)
+WHERE gd2000_xcoord IS NOT NULL AND gd2000_ycoord IS NOT NULL;
+EOF
 
 echo "Done importing addresses."

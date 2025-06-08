@@ -189,7 +189,7 @@ async def stripe_webhook(request: Request):
 
 # Autocomplete endpoint
 @app.get("/api/autocomplete")
-async def autocomplete(q: str = "", request: Request = Depends(rate_limit)):
+async def autocomplete(q: str = "", _: None = Depends(rate_limit)):
     if len(q) < 2:
         raise HTTPException(status_code=400, detail="Query too short")
 
@@ -208,7 +208,7 @@ async def autocomplete(q: str = "", request: Request = Depends(rate_limit)):
 
 # Verify endpoint
 @app.get("/api/verify")
-async def verify(address: str, request: Request = Depends(rate_limit)):
+async def verify(address: str, _: None = Depends(rate_limit)):
     async with AsyncSessionLocal() as session:
         sql = text("SELECT 1 FROM addresses WHERE full_address ILIKE :address LIMIT 1")
         result = await session.execute(sql, {"address": address})

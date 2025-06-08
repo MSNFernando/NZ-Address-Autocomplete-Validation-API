@@ -33,15 +33,16 @@ This is a full-stack, Dockerised platform for NZ address search, powered by **LI
 ```bash
 /NZ-Address-Autocomplete-Validation-API
 ├── Makefile
-├── .env                      # Environment variables
-├── docker-compose.yml        # Dev orchestration
+├── .env                        # Environment variables
+├── docker-compose.yml          # Dev orchestration
 ├── db/
-│   └── init.sql              # LINZ schema + data import
+│   └── init.sql                # LINZ schema + data import
+│   └── download_and_clean_csv.py # Downloads and cleans the Addresses CSV file
 ├── importer/
 │   ├── Dockerfile
-│   └── import_addresses.sh
-├── backend/                  # FastAPI
-├── frontend/                 # Next.js UI
+│   └── import_addresses.sh     # Copies and imports the cleaned Addresses CSV into the Database
+├── backend/                    # FastAPI
+├── frontend/                   # Next.js UI
 ```
 
 ## Getting Started
@@ -55,34 +56,27 @@ cp sample.env .env
 nano .env
 
 # update your variables!!!
-
-# Run with Docker
-docker compose up -d --build
-
-# Initialise the addresses table
-cd db
-chmod +x import_addresses.sh
-./import_addresses.sh
 ```
 
-## If the import_addresses doesnt work
+## Pre-requisite step
 ```bash
-# Download the LINZ Address CSV
-wget https://s3.filebase.co.nz/public/download%2F/nz-addresses.csv -o nz-address.csv
-
-# Import into the addresses table
-docker exec -i linz_postgres psql -U addressapi -d nz_address \
-  -c "copy addresses FROM '/data/nz-address.csv' with CSV HEADER"
-
-# Populate PostGIS geometry
-UPDATE addresses
-SET location = ST_SetSRID(ST_MakePoint(gd2000_xcoord, gd2000_ycoord), 4167)
-WHERE gd2000_xcoord IS NOT NULL AND gd2000_ycoord IS NOT NULL;
-```
+# Download the LINZ Address CSV and Clean for required columns
+cd db
+python3 download_and_clean_csv.py
 
 ## Generate Admin Token
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+## Run the Docker
+You can use the docker commands or use make which is included in the repo.
+```bash
+# Run with Docker
+docker compose up -d --build
+
+# Initialise the addresses table
+docker compose run --rm address_importer
 ```
 
 ## Monitoring or Debugging Redis
