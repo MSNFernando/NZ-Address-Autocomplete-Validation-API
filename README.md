@@ -92,3 +92,28 @@ make up
 make import-addresses
 make reset-db
 ```
+
+## Test API
+```bash
+curl -X 'GET' \
+  'http://192.168.1.133:3001/api/autocomplete?q=149%20coronation' \ 
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer test_api_key_123'
+```
+
+## Add user for testing
+```sql
+-- Create user
+INSERT INTO users (email, stripe_customer_id)
+VALUES ('test@example.com', 'cus_test123')
+RETURNING id;
+
+-- Replace with the returned UUID
+INSERT INTO api_keys (user_id, key, plan, is_active)
+VALUES (
+  'uuid-you-copied',
+  'test_api_key_123',
+  'free',
+  true
+);
+```
