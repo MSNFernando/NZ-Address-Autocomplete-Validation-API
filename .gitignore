@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+*.pyo
+.Python
+
+# FastAPI/venv
+backend/venv/
+#*.env
+.env
+*.db
+
+# PostgreSQL & Redis
+pgdata/
+redis_data/
+
+# Docker
+*.pid
+*.sock
+*.log
+*.tar
+*.gz
+*.bak
+*.swp
+docker-compose.override.yml
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/
+nohup.out
+
+# DB seed data
+#db/nz-addresses.csv
+#db/nz-addresses-clean.csv

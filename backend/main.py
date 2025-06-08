@@ -199,7 +199,7 @@ async def autocomplete(q: str = "", _: None = Depends(rate_limit)):
             FROM addresses 
             WHERE full_address ILIKE :query
             ORDER BY similarity(full_address, :query) DESC
-            LIMIT 10
+            -- LIMIT 10
         """)
         result = await session.execute(sql, {"query": f"%{q}%"})
         matches = [row[0] for row in result.fetchall()]
